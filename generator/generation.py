@@ -11,6 +11,10 @@ from rdkit.DataStructs.cDataStructs import TanimotoSimilarity
 from rdkit.Chem import rdFMCS, MolFromSmarts
 from selfies import encoder, decoder
 
+from openeye import oechem, oeomega, oeshape 
+from openeye.oeomega import OEOmega
+from openeye.oechem import OEMol, OEParseSmiles, OEMolToSmiles
+
 import selfies
 import fingerprint
 import filters
@@ -127,6 +131,7 @@ def mutate_selfie(selfie, max_molecules_len, write_fail_cases=False):
         alphabet = list(selfies.get_semantic_robust_alphabet()) # 34 SELFIE characters 
 
         choice_ls = [1, 2, 3] # 1=Insert; 2=Replace; 3=Delete
+#        choice_ls = [2, 3] # 1=Insert; 2=Replace; 3=Delete
         random_choice = np.random.choice(choice_ls, 1)[0]
         
         # Insert a character in a Random Location
@@ -361,7 +366,7 @@ def get_compr_paths(starting_smile, target_smile, num_tries, num_random_samples,
     return smiles_paths_dir1, smiles_paths_dir2
 
 
-def generation_path(liga_smiles, ligb_smiles, num_tries, num_random_smiles, collect_bidirectional, fp_type):
+def generation_path(liga_smiles, ligb_smiles, num_tries, num_random_smiles, collect_bidirectional, exponent_path, fp_type):
     """
     Runs the path-based generation and subsequently scores the generated molecules, returning the best predicted molecule.
     
@@ -397,10 +402,10 @@ def generation_path(liga_smiles, ligb_smiles, num_tries, num_random_smiles, coll
     print('total number of path based generated intermediates after filters: ', len(filtered_smiles_path))
 
     # scoring path based generation
-    smiles_, best_scores = scoring.score_median_mols(liga_smiles, ligb_smiles, filtered_smiles_path)
+    subset_tanimoto, best_scores = scoring.score_median_mols(liga_smiles, ligb_smiles, filtered_smiles_path, exponent_path)
 
     # drop duplicates 
-    subset_tanimoto = filters.drop_duplicates(liga_smiles, ligb_smiles, smiles_)
+    #subset_tanimoto = filters.drop_duplicates(liga_smiles, ligb_smiles, smiles_)
 
     # If subset_tanimoto is empty, return None
     if not subset_tanimoto:
@@ -413,7 +418,7 @@ def generation_path(liga_smiles, ligb_smiles, num_tries, num_random_smiles, coll
     return intermed_smiles
 
 
-def generate_multiple_paths(liga_smiles, ligb_smiles, num_tries, num_random_smiles, collect_bidirectional, n_rounds, fp_type):
+def generate_multiple_paths(liga_smiles, ligb_smiles, num_tries, num_random_smiles, collect_bidirectional, exponent_path, n_rounds, fp_type):
     """
     Runs the path-based generation n amount of times, finding multiple intermediates and so increasing the size of the searched chemical space.
     
@@ -432,7 +437,7 @@ def generate_multiple_paths(liga_smiles, ligb_smiles, num_tries, num_random_smil
     # create list for multiple intermed_smiles
     intermed_smiles_list = []
     for _ in range(n_rounds):
-        top_intermediate = generation_path(liga_smiles, ligb_smiles, num_tries, num_random_smiles, collect_bidirectional, fp_type=fp_type)
+        top_intermediate = generation_path(liga_smiles, ligb_smiles, num_tries, num_random_smiles, collect_bidirectional, exponent_path, fp_type=fp_type)
         intermed_smiles_list.append(top_intermediate)
         
     intermed_smiles = filters.drop_duplicates(liga_smiles, ligb_smiles, intermed_smiles_list)
@@ -552,3 +557,92 @@ def generate_chemical_space(liga_smiles, ligb_smiles, intermediate_smiles, num_r
 
     
     return combined_smiles
+
+
+def generation_path_rocs(liga_smiles, ligb_smiles, num_tries, num_random_smiles, collect_bidirectional, exponent_path, omega, fp_type):
+    """
+    Runs the path-based generation and subsequently scores the generated molecules, returning the best predicted molecule.
+    
+    Args:
+        liga_smiles (str): The SMILES representation of the first ligand.
+        ligb_smiles (str): The SMILES representation of the second ligand.
+        num_tries (int): The number of attempts for the path generation process.
+        num_random_smiles (int): The number of random SMILES to be generated.
+        collect_bidirectional (bool): Flag to determine if bidirectional path generation is considered.
+        fp_type (str): The fingerprint type used in scoring molecules.
+
+    Returns:
+        str: The SMILES representation of the best predicted intermediate molecule.
+    """
+    liga = Chem.MolFromSmiles(liga_smiles)
+    ligb = Chem.MolFromSmiles(ligb_smiles)
+    
+    # generate path
+    generated_paths = get_compr_paths(liga_smiles, ligb_smiles, num_tries, num_random_smiles, collect_bidirectional, fp_type=fp_type)
+    
+    # flatten lists
+    smiles_generated_paths = filters.flatten(generated_paths)
+    print('total number of path based generated intermediates: ', len(smiles_generated_paths))
+
+    # write smiles to mols
+    mols_generated_paths = [Chem.MolFromSmiles(smi) for smi in smiles_generated_paths]
+
+    # drop duplicates
+    uniq = filters.drop_duplicates(liga_smiles, ligb_smiles, smiles_generated_paths)
+    
+    # apply filters path based generation
+    filtered_smiles_path = filters.filters_path_based_generation(liga_smiles, ligb_smiles, uniq)
+    print('total number of path based generated intermediates after filters: ', len(filtered_smiles_path))
+
+    # scoring path based generation
+    #subset_tanimoto, best_scores = scoring.score_median_mols(liga_smiles, ligb_smiles, filtered_smiles_path)
+
+    # add rocs based scoring function
+#    subset_rocs, best_scores = scoring.rocs(liga_smiles, filtered_smiles_path, ligb_smiles, exponent_path)
+    subset_rocs, best_scores = scoring.rocs(liga_smiles, filtered_smiles_path, ligb_smiles, 100, omega, exponent_path)
+#    print(subset_rocs, best_scores, "subsetrocs")
+    
+    # drop duplicates 
+    #subset_tanimoto = filters.drop_duplicates(liga_smiles, ligb_smiles, smiles_)
+
+    # If subset_tanimoto is empty, return None
+    if not subset_rocs:
+        print("subset_rocs is empty. Skipping this iteration.")
+        return None
+    
+    # select path based intermediate
+    #print(subset_rocs[0], "best scoring molecule per iteration")
+    intermed_smiles = subset_rocs[0]
+    
+    return intermed_smiles
+
+
+def generate_multiple_paths_rocs(liga_smiles, ligb_smiles, num_tries, num_random_smiles, collect_bidirectional, exponent_path, n_rounds, fp_type):
+    """
+    Runs the path-based generation n amount of times, finding multiple intermediates and so increasing the size of the searched chemical space.
+    
+    Args:
+        liga_smiles (str): The SMILES representation of the first ligand.
+        ligb_smiles (str): The SMILES representation of the second ligand.
+        num_tries (int): The number of attempts for the path generation process.
+        num_random_smiles (int): The number of random SMILES to be generated.
+        collect_bidirectional (bool): Flag to determine if bidirectional path generation is considered.
+        n_rounds (int): The number of rounds to perform the path-based generation.
+        fp_type (str): The fingerprint type used in scoring molecules.
+
+    Returns:
+        list: The list of unique top-scoring intermediates.
+    """    
+    omega = scoring.initialize_omega()
+    
+    # create list for multiple intermed_smiles
+    intermed_smiles_list = []
+    for _ in range(n_rounds):
+        top_intermediate = generation_path_rocs(liga_smiles, ligb_smiles, num_tries, num_random_smiles, collect_bidirectional, exponent_path, omega, fp_type=fp_type)
+        intermed_smiles_list.append(top_intermediate)
+        
+    intermed_smiles = filters.drop_duplicates(liga_smiles, ligb_smiles, intermed_smiles_list)
+    print('Number of unique top1-scoring intermediates: ',len(intermed_smiles))
+    
+    return intermed_smiles
+

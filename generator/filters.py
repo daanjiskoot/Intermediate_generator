@@ -58,8 +58,8 @@ def filter_smiles_by_heavy_atoms(reference_smiles_1, reference_smiles_2, smiles_
     min_heavy_atoms = min(liga_heavy_atoms, ligb_heavy_atoms)
     max_heavy_atoms = max(liga_heavy_atoms, ligb_heavy_atoms)
 
-    # Calculate the 80% and 110% thresholds
-    lower_threshold = 0.8 * min_heavy_atoms
+    # Calculate the 70% and 110% thresholds
+    lower_threshold = 0.7 * min_heavy_atoms
     upper_threshold = 1.1 * max_heavy_atoms
 
     # Filter canon_smi_ls based on the thresholds
@@ -207,38 +207,56 @@ def filter_charge(liga, ligb, mol_list):
     # Calculate min and max charge
     min_pos_charge = min(pos_charge_liga, pos_charge_ligb)
     max_pos_charge = max(pos_charge_liga, pos_charge_ligb)
-    min_neg_charge = max(neg_charge_liga, neg_charge_ligb) # Note: min and max are reversed for negative charges
-    max_neg_charge = min(neg_charge_liga, neg_charge_ligb)
+    min_neg_charge = min(neg_charge_liga, neg_charge_ligb)
+    max_neg_charge = max(neg_charge_liga, neg_charge_ligb)
 
     # Filter molecules
     filtered_mols = [mol for mol in mol_list if min_pos_charge <= get_positive_charge(mol) <= max_pos_charge and min_neg_charge <= get_negative_charge(mol) <= max_neg_charge]
 
     return filtered_mols
 
+# check for removal
+#def drop_duplicates(liga_smiles, ligb_smiles, molecule_list):
+#    """
+#    Processes a list of molecules, removing any duplicates and the two specified input molecules.
+#
+#    Args:
+#        liga_smiles (str): SMILES string of the first input molecule.
+#        ligb_smiles (str): SMILES string of the second input molecule.
+#        molecule_list (list): List of SMILES strings of the molecules.
+#
+#    Returns:
+#
+#    list: List of unique SMILES strings, excluding the input molecules.
+#    """
+#    molecule_list = list(set(molecule_list))
+#
+#    # Remove the input molecules from the list if they are present
+#    # and list has more than one item.
+#    if len(molecule_list) > 1 and liga_smiles in molecule_list:
+#        molecule_list.remove(liga_smiles)
+#
+#    if len(molecule_list) > 1 and ligb_smiles in molecule_list:
+#        molecule_list.remove(ligb_smiles)
+#
+ #   return molecule_list
 
+# check if this function functions appropriately
 def drop_duplicates(liga_smiles, ligb_smiles, molecule_list):
-    """
-    Processes a list of molecules, removing any duplicates and the two specified input molecules.
-
-    Args:
-        liga_smiles (str): SMILES string of the first input molecule.
-        ligb_smiles (str): SMILES string of the second input molecule.
-        molecule_list (list): List of SMILES strings of the molecules.
-
-    Returns:
-        list: List of unique SMILES strings, excluding the input molecules.
-    """
-    molecule_list = list(set(molecule_list))
-
+    molecule_list = flatten(molecule_list)
+    new_molecule_list = []
+    duplicates = set()
+    for molecule in molecule_list:
+        if molecule not in duplicates:
+            new_molecule_list.append(molecule)
+            duplicates.add(molecule)
     # Remove the input molecules from the list if they are present
     # and list has more than one item.
-    if len(molecule_list) > 1 and liga_smiles in molecule_list:
-        molecule_list.remove(liga_smiles)
-
-    if len(molecule_list) > 1 and ligb_smiles in molecule_list:
-        molecule_list.remove(ligb_smiles)
-
-    return molecule_list
+    if len(new_molecule_list) > 1 and liga_smiles in new_molecule_list:
+        new_molecule_list.remove(liga_smiles)
+    if len(new_molecule_list) > 1 and ligb_smiles in new_molecule_list:
+        new_molecule_list.remove(ligb_smiles)
+    return new_molecule_list
 
 
 
@@ -378,10 +396,11 @@ def filters_path_based_generation(liga_smiles, ligb_smiles, mols):
     charge_check_smiles = [Chem.MolToSmiles(smi) for smi in charge_check_mols]
 
     # heavy atom filter. This would register all heavy atoms in the original molecules, and if there is a novel heavy atom introduced, we throw it out. 
-    drop_introduced_atoms = drop_new_atom_type(liga, ligb, charge_check_mols)
+    # unnessacery in this step, because we are in the limited chemical space between 2 molecules
+   # drop_introduced_atoms = drop_new_atom_type(liga, ligb, charge_check_mols)
 
     # divergent ring size removal filter
-    same_rings = remove_divergent_ring_sizes(liga, ligb, drop_introduced_atoms)
+    same_rings = remove_divergent_ring_sizes(liga, ligb, charge_check_mols)
 
     # remove molecules with lone pair if not present in starting molecules
     lone_pair_removed = lone_pair(liga, ligb, same_rings)
@@ -422,7 +441,7 @@ def filters_local_chemical_space_generation(liga_smiles, ligb_smiles, mols):
     mcs_mols = [mol for mol in test_mols if mol.HasSubstructMatch(mcs)]
     mcs_smiles = [Chem.MolToSmiles(smi) for smi in mcs_mols]
 
-    # filter molecules with a divergent charge count
+    # filter molecules with a divergent charge count    
     charge_corrected_mols = filter_charge(liga, ligb, mcs_mols)
     charge_corrected_smiles = [Chem.MolToSmiles(smi) for smi in charge_corrected_mols]
 
@@ -444,7 +463,7 @@ def filters_local_chemical_space_generation(liga_smiles, ligb_smiles, mols):
 
     return filtered_smiles
 
-
+# check if the new findpotentialstereo works more exhaustively
 def count_chiral_atoms(mol):
     """
     Counts the number of chiral centers (CW and CCW) in the input molecule.
@@ -455,7 +474,10 @@ def count_chiral_atoms(mol):
     Returns:
         tuple: The number of CW and CCW chiral centers in the molecule
     """
-    Chem.AssignStereochemistry(mol, cleanIt=True, force=True, flagPossibleStereoCenters=True)
+    # this is the old way of assinging stereochemistry
+   # Chem.AssignStereochemistry(mol, cleanIt=True, force=True, flagPossibleStereoCenters=True)
+# this function should be more precise and quicker
+    Chem.FindPotentialStereo(mol, cleanIt=True)
     
     chiral_centers_cw = 0
     chiral_centers_ccw = 0

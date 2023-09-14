@@ -1,9 +1,13 @@
 import rdkit
 import matplotlib.pyplot as plt
 import time
+import openbabel
+from openbabel import pybel
 from rdkit import Chem
-from rdkit.Chem import rdFMCS, AllChem
+from rdkit.Chem import rdFMCS, AllChem, rdMolAlign
 from rdkit.Chem.Draw import MolToImage
+import numpy as np
+from scipy.spatial.distance import cdist
 
 import filters
 
@@ -59,7 +63,7 @@ def alignLigands(liga, intermediate, ligb):
     return liga, intermediate, ligb
 
 
-def visualise(liga_smiles, ligb_smiles, selected_intermediate_smiles, mins, secs, filepath, filename):
+def visualise(liga_smiles, ligb_smiles, selected_intermediate_smiles, mins, secs, filepath, filename, svg, png):
     """
     Visualise and save an image of three aligned ligands with the Maximum Common Substructure (MCS) highlighted.
     
@@ -111,10 +115,100 @@ def visualise(liga_smiles, ligb_smiles, selected_intermediate_smiles, mins, secs
     # options to save image
     
     # adjust save options if we use multiple input molecules
-    
-    plt.savefig(f'{filepath}.svg')  # For SVG n     format
-    #plt.savefig('pert.png')  # For PNG format
+    if svg == True:
+        plt.savefig(f'{filepath}.svg')  # For SVG format
+    if png == True:
+        plt.savefig(f'{filepath}.png')  # For PNG format
 
     plt.show()
 
+def calculate_rmsd(ref_coords, prb_coords):
+    return np.sqrt(np.mean(np.sum(np.square(ref_coords - prb_coords), axis=1)))
+
+def align_intermediates_to_references(refmol1, refmol2, intermediate_smiles, outfile, n_conformers=1):
+    """
+    Align an intermediate molecule to two reference molecules separately. 
+    The aligned molecules are saved in an sdf file.
+    """
+    mols = [refmol1, refmol2, Chem.MolFromSmiles(intermediate_smiles)]
     
+    # Add hydrogens and generate conformers for the intermediate molecule
+    mols[2] = Chem.AddHs(mols[2])
+    AllChem.EmbedMultipleConfs(mols[2], numConfs=n_conformers, useExpTorsionAnglePrefs=True, useBasicKnowledge=True)
+    
+    # Find the MCS:
+    mcs = rdFMCS.FindMCS(mols, threshold=0.8, completeRingsOnly=True, ringMatchesRingOnly=True)
+    patt = Chem.MolFromSmarts(mcs.smartsString)
+    
+    writer = Chem.SDWriter(outfile)
+    
+    best_rmsd = [float('inf'), float('inf')]  # Initialize best RMSD as infinity for both reference molecules
+    best_conformer = [None, None]  # Initialize best conformer as None for both reference molecules
+    
+    for conf_id in range(n_conformers):
+        for idx, refmol in enumerate([refmol1, refmol2]):
+            intermediate_copy = Chem.Mol(mols[2])  # Copy the intermediate molecule for alignment
+            intermediate_copy.RemoveAllConformers()
+            
+            try:
+                intermediate_copy.AddConformer(mols[2].GetConformer(conf_id), assignId=True)
+            except ValueError:
+                # If there's a ValueError (e.g., conformer ID doesn't exist), just continue
+                continue
+
+            refMatch = refmol.GetSubstructMatch(patt)
+            smarts_mcs = intermediate_copy.GetSubstructMatch(patt)
+            rdMolAlign.AlignMol(intermediate_copy, refmol, atomMap=list(zip(smarts_mcs, refMatch)))
+
+            # Extract coordinates for matched atoms
+            ref_conf = refmol.GetConformer()
+            prb_conf = intermediate_copy.GetConformer()
+            ref_coords = np.array([list(ref_conf.GetAtomPosition(i)) for i in refMatch])
+            prb_coords = np.array([list(prb_conf.GetAtomPosition(i)) for i in smarts_mcs])
+
+            # Calculate RMSD and keep track of the conformer with the lowest RMSD
+            rmsd = calculate_rmsd(ref_coords, prb_coords)
+            if rmsd < best_rmsd[idx]:
+                best_rmsd[idx] = rmsd
+                best_conformer[idx] = intermediate_copy
+
+    # Write the conformers with the lowest RMSD for both refs as output
+#    for conformer in best_conformer:
+ #       if conformer is not None:
+  #          writer.write(conformer)
+            
+    
+    # only write one conformer to output file
+    if best_conformer[0] is not None:
+        writer.write(best_conformer[0])
+
+    # Comment out or remove the next two lines to not write the conformer aligned to the second reference molecule
+    #if best_conformer[1] is not None:
+    #    writer.write(best_conformer[1])
+    
+    writer.close()
+
+def mol2_to_rdkit(path):
+    """Convert a mol2 file to an RDKit Mol object using Pybel."""
+    with open(path, 'r') as f:
+        mol2_text = f.read()
+    mol = pybel.readstring("mol2", mol2_text)
+    return Chem.MolFromMolBlock(mol.write("sdf"))
+
+def get_mol_from_file(tgt, lig, file_extension, lig_path):
+    path = lig_path
+    if file_extension == ".sdf":
+        return Chem.rdmolfiles.SDMolSupplier(path)[0]
+    elif file_extension == ".mol2":
+        return mol2_to_rdkit(path)
+    else:
+        raise ValueError(f"Unsupported file extension: {file_extension}")
+        
+def fetch_molecule(target, ligand, lig_path, ext):
+    for path_suffix in [ligand, f"lig_{ligand}"]:
+        full_path = f"{lig_path}/{target}/{path_suffix}{ext}"
+        try:
+            return get_mol_from_file(target, ligand, ext, full_path)
+        except OSError:
+            continue
+    return None
