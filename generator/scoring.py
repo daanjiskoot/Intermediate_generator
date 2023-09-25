@@ -11,7 +11,7 @@ from rdkit.Chem.rdchem import Mol
 from rdkit.Chem import MolFromSmiles as smi2mol, MolToSmiles as mol2smi, AllChem, rdMolAlign, Descriptors, Draw
 from selfies import encoder, decoder 
 
-import filters
+from . import filters
 
 from openeye import oechem, oeomega, oeshape 
 from openeye.oeomega import OEOmega

@@ -16,9 +16,9 @@ from openeye.oeomega import OEOmega
 from openeye.oechem import OEMol, OEParseSmiles, OEMolToSmiles
 
 import selfies
-import fingerprint
-import filters
-import scoring
+from . import fingerprint
+from . import filters
+from . import scoring
 
 
 def sanitize_smiles(smi):

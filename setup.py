@@ -2,14 +2,14 @@ from setuptools import setup, find_packages
 
 setup(
     name="intermediate_generator",
-    version="0.0.3",
+    version="0.1.0",
     author="Daan Jiskoot",
     author_email="djiskoot@vuw.leidenuniv.nl",
     description="A molecular intermediate generator for relative binding free energy calculations",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/daanjiskoot/Intermediate_generator",
-    packages=find_packages(where='generator'),
+    packages=find_packages(),
     classifiers=[
         "Topic :: Scientific/Engineering :: Chemistry",
         "Programming Language :: Python :: 3",
@@ -24,13 +24,12 @@ setup(
         "pandas>=2.0",
         "matplotlib>=3.7",
         "seaborn>=0.12",
-        "openbabel>=3.1",
         "rdkit==2022.09.5",
         "selfies==2.1.1"
-    ]
+    ],
         entry_points={
         'console_scripts': [
-            'intermediates = your_module:main'
+            'intermediates=generator.cli:main'
         ]
     }
 )

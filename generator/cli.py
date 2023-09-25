@@ -5,12 +5,12 @@ def main():
     parser = argparse.ArgumentParser(description='Calculate intermediates for molecular transformations.')
     
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('--sdf_files', 'i1', nargs=2, type=str, help='Paths to two SDF files containing molecules.')
-    group.add_argument('--mol2_files', 'i2', nargs=2, type=str, help='Paths to two mol2 files containing molecules.')
-    group.add_argument('--text_file', 'i3', type=str, help='Path to a text file containing the perts_to_intrap list.')
+    group.add_argument('--sdf_files', '-i1', nargs=2, type=str, help='Paths to two SDF files containing molecules.')
+    group.add_argument('--mol2_files', '-i2', nargs=2, type=str, help='Paths to two mol2 files containing molecules.')
+    group.add_argument('--text_file', '-i3', type=str, help='Path to a text file containing the perts_to_intrap list.')
     
     parser.add_argument('--base_dir', '-b', type=str, required=True, help='Location to save images of pairs with intermediates.')
-    parser.add_argument('--lig_path', '-l', type=str, required=True, help='Path to your ligand folder')
+    parser.add_argument('--lig_path', '-l', type=str, required=False, help='Path to your ligand folder')
     
     parser.add_argument('--num_tries', '-n', type=int, default=10, help='Number of path/chemical path attempts between the exact same smiles.')
     parser.add_argument('--num_random_smiles', '-r', type=int, default=10, help='Number of different SMILES string orderings to consider for starting_smile & target_smile.')
@@ -32,26 +32,26 @@ def main():
 
 
     intermediates(
-        args.sdf_files, 
-        args.text_file, 
-        args.base_dir, 
-        args.num_tries, 
-        args.num_random_smiles, 
-        args.collect_bidirectional, 
-        args.n_rounds, 
-        args.fp_type, 
-        args.num_random_samples, 
-        args.num_mutation_ls,
-        args.lig_path,
-        args.exponent_path,
-        args.exponent_local_chemical_space,
-        args.sdf,
-        args.svg,
-        args.png,
-        args.scoring_method,
-        args.contribution_lomap,
-        args.contribution_similarity
+        args.sdf_files,  # perts_to_intrap
+        args.base_dir,  # base_dir
+        args.lig_path,   # lig_path
+        args.num_tries,  # num_tries
+        args.num_random_smiles,  # num_random_smiles
+        args.collect_bidirectional,  # collect_bidirectional
+        args.fp_type,  # fp_type
+        args.num_random_samples,  # num_random_samples
+        args.num_mutation_ls,  # num_mutation_ls
+        args.n_rounds,  # n_rounds
+        args.exponent_path,  # exponent_path
+        args.exponent_local_chemical_space,  # exponent_local_chemical_space
+        args.sdf,  # sdf
+        args.svg,  # svg
+        args.png,  # png
+        args.scoring_method,  # scoring_method
+        args.contribution_lomap,  # contribution_lomap
+        args.contribution_similarity,  # contribution_similarity
     )
+
     
 if __name__ == "__main__":
     main()

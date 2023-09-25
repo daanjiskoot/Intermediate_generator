@@ -9,7 +9,7 @@ from rdkit.Chem.Draw import MolToImage
 import numpy as np
 from scipy.spatial.distance import cdist
 
-import filters
+from . import filters
 
 def draw_molecule_with_mcs(mol, mcs_mol, size=(400, 400)):
     """
@@ -212,3 +212,19 @@ def fetch_molecule(target, ligand, lig_path, ext):
         except OSError:
             continue
     return None
+
+from rdkit import Chem
+
+def read_molecule_from_sdf(sdf_path):
+    """
+    Reads the first molecule from an SDF file and returns it.
+
+    Args:
+    - sdf_path (str): Path to the SDF file.
+
+    Returns:
+    - RDKit Mol object representing the molecule.
+    """
+    suppl = Chem.SDMolSupplier(sdf_path)
+    for mol in suppl:
+        return mol  # returns the first molecule from the SDF
