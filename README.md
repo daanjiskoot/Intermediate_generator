@@ -10,13 +10,18 @@ This generation of intermediates works in 2 rounds. In the first generative roun
 
 The package can be installed as a PyPI package using:
 ```pip install intermediate-generator```
+
 additional dependencies can be installed with:
 ```conda install -c openeye openeye-toolkits```
+
 ```other```
+
 ```other```
 
 OR
+
 All requirements can be installed by runnning the environment file(to do):
+
 ```conda env create -f environment.yml```
 
 # Acknowledgements
