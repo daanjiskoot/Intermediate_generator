@@ -12,6 +12,7 @@ The package can be installed as a PyPI package using:
 ```pip install intermediate-generator```
 
 additional dependencies can be installed with:
+
 ```conda install -c openeye openeye-toolkits```
 
 ```other```
@@ -20,7 +21,7 @@ additional dependencies can be installed with:
 
 OR
 
-All requirements can be installed by runnning the environment file(to do):
+All requirements can be installed by solving the environment through(to do):
 
 ```conda env create -f environment.yml```
 
