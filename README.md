@@ -25,4 +25,8 @@ All requirements can be installed by solving the environment through(to do):
 
 ```conda env create -f environment.yml```
 
+# Usage
+
+Include code example and how to access all the parameters//options
+
 # Acknowledgements
