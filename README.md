@@ -12,11 +12,11 @@ This generation of intermediates works in 2 rounds. In the first generative roun
 - OpenEye toolkit (a license is only required for 3D scoring)
 - Openbabel
 - Ipython
-- Scipy
 
 # Installation of the package
 
 The package can be installed as a PyPI package using:
+
 ```pip install intermediate-generator```
 
 
