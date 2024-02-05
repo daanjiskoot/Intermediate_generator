@@ -13,7 +13,7 @@ This generation of intermediates works in 2 rounds. In the first generative roun
 - Openbabel
 - Ipython
 
-# Installation of the package
+# Installation 
 
 The package can be installed as a PyPI package using:
 
