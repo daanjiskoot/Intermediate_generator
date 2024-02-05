@@ -13,11 +13,11 @@ The package can be installed as a PyPI package using:
 
 additional requirements can be installed with:
 
+```conda install -c conda-forge lomap2```
+
 ```conda install -c openeye openeye-toolkits```
 
 ```pip install openbabel```
-
-```other```
 
 OR
 
