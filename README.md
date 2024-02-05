@@ -26,6 +26,10 @@ The minimal command to run the intermediate generator requires to call intermedi
 
 ```intermediates -i1 path/to/ligand1.sdf path/to/ligand2.sdf -b path/to/save```
 
-Various more parameters can be set, which can be shown with intermediates --help or found in the cli.py file.
+Various more parameters can be set, which can be shown with: 
+
+```intermediates --help``` 
+
+or can be found in the cli.py file.
 
 # Acknowledgements
