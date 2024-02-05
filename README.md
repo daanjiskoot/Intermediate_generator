@@ -5,31 +5,25 @@ This generation of intermediates works in 2 rounds. In the first generative roun
 
 <img width="449" alt="image" src="https://github.com/daanjiskoot/Intermediate_generator/assets/99884943/822f0603-0cf4-43a6-ad7b-f790591c2f21">
 
+# Prerequisites
+
+- Lomap
+- OpenEye toolkit (license only required for 3D scoring)
+- Openbabel
+- Ipython
+- Scipy
 
 # Installation of the package
 
 The package can be installed as a PyPI package using:
 ```pip install intermediate-generator```
 
-additional requirements can be installed with:
-
-```conda install -c conda-forge lomap2```
-
-```conda install -c openeye openeye-toolkits```
-
-```pip install openbabel```
-
-OR
-
-All requirements can be installed by solving the environment through(to do):
-
-```conda env create -f environment.yml```
 
 # Usage
 
 Minimal command:
 
-intermediates -i1 path/to/ligand1.sdf path/to/ligand2.sdf -b path/to/save 
+- intermediates -i1 path/to/ligand1.sdf path/to/ligand2.sdf -b path/to/save 
 
 Various more parameters can be set, which can be shown with intermediates --help (check this!)
 
