@@ -15,7 +15,7 @@ additional requirements can be installed with:
 
 ```conda install -c openeye openeye-toolkits```
 
-```other```
+```pip install openbabel```
 
 ```other```
 
