@@ -19,6 +19,11 @@ The package can be installed as a PyPI package using:
 
 ```pip install intermediate-generator```
 
+OR
+
+Create the shipped conda environment using:
+
+```conda env create -f environment.yml```
 
 # Usage
 
