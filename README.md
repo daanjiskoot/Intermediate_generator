@@ -27,6 +27,10 @@ All requirements can be installed by solving the environment through(to do):
 
 # Usage
 
-Include code example and how to access all the parameters//options
+Minimal command:
+
+intermediates -i1 path/to/ligand1.sdf path/to/ligand2.sdf -b path/to/save 
+
+Various more parameters can be set, which can be shown with intermediates --help (check this!)
 
 # Acknowledgements
