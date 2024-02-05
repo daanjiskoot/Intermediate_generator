@@ -38,6 +38,9 @@ or can be found in the cli.py file.
 # Authors
 
 This version of the intermediate generator was created by: 
+
 Daan Jiskoot
+
 David Mobley
+
 Willem Jespers
