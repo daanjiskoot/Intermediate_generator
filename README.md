@@ -24,7 +24,7 @@ The package can be installed as a PyPI package using:
 
 The minimal command to run the intermediate generator requires to call intermediates with the path to two sdf files with the endpoint molecules and a base directory to save the ouput files:
 
-```intermediates -i1 path/to/ligand1.sdf path/to/ligand2.sdf -b path/to/save```
+```intermediates -i1 path/to/ligand1.sdf path/to/ligand2.sdf -b path/to/basedir```
 
 Various more parameters can be set, which can be shown with: 
 
