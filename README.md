@@ -7,8 +7,9 @@ This generation of intermediates works in 2 rounds. In the first generative roun
 
 # Prerequisites
 
+- Python (tested with version 3.10)
 - Lomap
-- OpenEye toolkit (license only required for 3D scoring)
+- OpenEye toolkit (a license is only required for 3D scoring)
 - Openbabel
 - Ipython
 - Scipy
