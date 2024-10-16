@@ -384,29 +384,29 @@ def filters_path_based_generation(liga_smiles, ligb_smiles, mols):
     mols_with_mcs_smiles = [Chem.MolToSmiles(mol) for mol in mols_with_mcs]
     
     # check if the chirality matches
-    filtered_list_mcs_chirality = chiral_equal(liga, ligb, mols_with_mcs)
-    mols_with_mcs_smiles_chiral = [Chem.MolToSmiles(mol) for mol in filtered_list_mcs_chirality]
+    #filtered_list_mcs_chirality = chiral_equal(liga, ligb, mols_with_mcs)
+    #mols_with_mcs_smiles_chiral = [Chem.MolToSmiles(mol) for mol in filtered_list_mcs_chirality]
 
     # filter based on number of heavy atoms
-    num_heavy_atom = filter_smiles_by_heavy_atoms(liga_smiles, ligb_smiles, mols_with_mcs_smiles_chiral)
-    num_heavy_atom_mols = [Chem.MolFromSmiles(mol) for mol in num_heavy_atom]
+    #num_heavy_atom = filter_smiles_by_heavy_atoms(liga_smiles, ligb_smiles, mols_with_mcs_smiles_chiral)
+    #num_heavy_atom_mols = [Chem.MolFromSmiles(mol) for mol in num_heavy_atom]
 
     # filter molecules with a divergent charge count
-    charge_check_mols = filter_charge(liga, ligb, num_heavy_atom_mols)
-    charge_check_smiles = [Chem.MolToSmiles(smi) for smi in charge_check_mols]
+    #charge_check_mols = filter_charge(liga, ligb, num_heavy_atom_mols)
+    #charge_check_smiles = [Chem.MolToSmiles(smi) for smi in charge_check_mols]
 
     # heavy atom filter. This would register all heavy atoms in the original molecules, and if there is a novel heavy atom introduced, we throw it out. 
     # unnessacery in this step, because we are in the limited chemical space between 2 molecules
    # drop_introduced_atoms = drop_new_atom_type(liga, ligb, charge_check_mols)
 
     # divergent ring size removal filter
-    same_rings = remove_divergent_ring_sizes(liga, ligb, charge_check_mols)
+    #same_rings = remove_divergent_ring_sizes(liga, ligb, charge_check_mols)
 
     # remove molecules with lone pair if not present in starting molecules
-    lone_pair_removed = lone_pair(liga, ligb, same_rings)
-    lone_pair_removed_smiles = [Chem.MolToSmiles(smi) for smi in lone_pair_removed]
+    #lone_pair_removed = lone_pair(liga, ligb, same_rings)
+    #lone_pair_removed_smiles = [Chem.MolToSmiles(smi) for smi in lone_pair_removed]
 
-    return lone_pair_removed_smiles
+    return mols_with_mcs_smiles
 
 
 # this function applies a series of filters on the molecules that are generated in the local space generation.
@@ -441,7 +441,7 @@ def filters_local_chemical_space_generation(liga_smiles, ligb_smiles, mols):
     mcs_mols = [mol for mol in test_mols if mol.HasSubstructMatch(mcs)]
     mcs_smiles = [Chem.MolToSmiles(smi) for smi in mcs_mols]
 
-    # filter molecules with a divergent charge count    
+     #filter molecules with a divergent charge count    
     charge_corrected_mols = filter_charge(liga, ligb, mcs_mols)
     charge_corrected_smiles = [Chem.MolToSmiles(smi) for smi in charge_corrected_mols]
 

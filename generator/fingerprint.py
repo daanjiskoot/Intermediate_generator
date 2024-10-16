@@ -8,7 +8,7 @@ import seaborn as sns
 import warnings
 
 from rdkit import Chem
-from rdkit.Chem import AllChem, rdMolAlign, Descriptors, Draw, rdFMCS
+from rdkit.Chem import AllChem, rdMolAlign, Descriptors, Draw, rdFMCS, rdFingerprintGenerator
 from rdkit.Chem.rdchem import Mol
 from rdkit.DataStructs.cDataStructs import TanimotoSimilarity
 from selfies import encoder, decoder 
@@ -40,17 +40,30 @@ class _FingerprintCalculator:
     def get_PATH(self, mol: Mol):
         return AllChem.RDKFingerprint(mol)
 
+    #def get_ECFP4(self, mol: Mol):
+     #   return AllChem.GetMorganFingerprint(mol, 2)
+        
     def get_ECFP4(self, mol: Mol):
-        return AllChem.GetMorganFingerprint(mol, 2)
+        """
+        Generate the ECFP4 (Morgan fingerprint with radius 2) for a given molecule.
 
-    def get_ECFP6(self, mol: Mol):
-        return AllChem.GetMorganFingerprint(mol, 3)
+        Parameters:
+        mol (Chem.Mol): RDKit molecule object.
 
-    def get_FCFP4(self, mol: Mol):
-        return AllChem.GetMorganFingerprint(mol, 2, useFeatures=True)
+        Returns:
+        rdkit.DataStructs.cDataStructs.ExplicitBitVect: Morgan fingerprint.
+        """
+        fp = rdFingerprintGenerator.GetMorganGenerator(radius=2,fpSize=2048)
+        return fp.GetFingerprint(mol)
 
-    def get_FCFP6(self, mol: Mol):
-        return AllChem.GetMorganFingerprint(mol, 3, useFeatures=True)
+    #def get_ECFP6(self, mol: Mol):
+     #   return AllChem.GetMorganFingerprint(mol, 3)
+
+    #def get_FCFP4(self, mol: Mol):
+     #   return AllChem.GetMorganFingerprint(mol, 2, useFeatures=True)
+
+    #def get_FCFP6(self, mol: Mol):
+     #   return AllChem.GetMorganFingerprint(mol, 3, useFeatures=True)
 
 
 def get_fingerprint(mol: Mol, fp_type: str):

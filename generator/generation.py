@@ -11,9 +11,9 @@ from rdkit.DataStructs.cDataStructs import TanimotoSimilarity
 from rdkit.Chem import rdFMCS, MolFromSmarts
 from selfies import encoder, decoder
 
-from openeye import oechem, oeomega, oeshape 
-from openeye.oeomega import OEOmega
-from openeye.oechem import OEMol, OEParseSmiles, OEMolToSmiles
+#from openeye import oechem, oeomega, oeshape 
+#from openeye.oeomega import OEOmega
+#from openeye.oechem import OEMol, OEParseSmiles, OEMolToSmiles
 
 import selfies
 from . import fingerprint
@@ -403,6 +403,7 @@ def generation_path(liga_smiles, ligb_smiles, num_tries, num_random_smiles, coll
 
     # scoring path based generation
     subset_tanimoto, best_scores = scoring.score_median_mols(liga_smiles, ligb_smiles, filtered_smiles_path, exponent_path)
+    print(subset_tanimoto, best_scores)
 
     # drop duplicates 
     #subset_tanimoto = filters.drop_duplicates(liga_smiles, ligb_smiles, smiles_)
@@ -554,6 +555,7 @@ def generate_chemical_space(liga_smiles, ligb_smiles, intermediate_smiles, num_r
 
     combined_smiles = filters.drop_duplicates(liga, ligb, all_filtered_smiles)    
     print('total number of unique generated local chemical space intermediates: ', len(combined_smiles))
+    print('these are the final smiles:', combined_smiles)
 
     
     return combined_smiles

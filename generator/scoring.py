@@ -8,7 +8,7 @@ import numpy as np
 
 from rdkit import Chem, RDLogger, DataStructs
 from rdkit.Chem.rdchem import Mol
-from rdkit.Chem import MolFromSmiles as smi2mol, MolToSmiles as mol2smi, AllChem, rdMolAlign, Descriptors, Draw
+from rdkit.Chem import MolFromSmiles as smi2mol, MolToSmiles as mol2smi, AllChem, rdMolAlign, Descriptors, Draw, rdFingerprintGenerator
 from selfies import encoder, decoder 
 
 from . import filters
@@ -30,21 +30,23 @@ def tanimoto_complex(starting_smile, all_smiles, target_smile, exponent_path):
     Returns:
         list: List of similarity scores.
     """
-    
+
+    fp = rdFingerprintGenerator.GetMorganGenerator(radius=2,fpSize=2048)
+
     # put all stuff for the start en target outside of loop, all_smiles in loop because multiple molecules, using ECFP4
     similarity_score = []
     start = Chem.MolFromSmiles(starting_smile)
     target = Chem.MolFromSmiles(target_smile)
     # calculate the ECFP4 fingerprints for the three molecules
-    fp_1 = AllChem.GetMorganFingerprint(start, radius=2)
-    #fp_2 = AllChem.GetMorganFingerprint(intermediate, radius=3)
-    fp_3 = AllChem.GetMorganFingerprint(target, radius=2)
+    fp_1 = fp.GetFingerprint(start)
+    #fp_2 = fp.GetFingerprint(intermediate, radius=3)
+    fp_3 = fp.GetFingerprint(target)
 
     for item in all_smiles: 
         mol    = Chem.MolFromSmiles(item)
         if mol is None:
             continue
-        fp_mol = AllChem.GetMorganFingerprint(mol, radius=2)
+        fp_mol = fp.GetFingerprint(mol)
         similarity1  = DataStructs.TanimotoSimilarity(fp_mol, fp_1)
         similarity2  = DataStructs.TanimotoSimilarity(fp_mol, fp_3)
         # Calculate the harmonic mean of the similarities
@@ -424,10 +426,12 @@ def tanimoto_scoring(starting_smile, intermediate_smile, target_smile, exponent_
     target = Chem.MolFromSmiles(target_smile)
     intermediate = Chem.MolFromSmiles(intermediate_smile)
 
-    # Calculate the ECFP4 fingerprints for the three molecules
-    fp_1 = AllChem.GetMorganFingerprint(start, radius=2)
-    fp_3 = AllChem.GetMorganFingerprint(target, radius=2)
-    fp_mol = AllChem.GetMorganFingerprint(intermediate, radius=2)
+    # Calculate the ECFP4 fingerprints for the three molecules 
+    fp = rdFingerprintGenerator.GetMorganGenerator(radius=2,fpSize=2048)
+
+    fp_1 = fp.GetFingerprint(start)
+    fp_3 = fp.GetFingerprint(target)
+    fp_mol = fp.GetFingerprint(intermediate)
 
     # Calculate the Tanimoto similarity
     similarity1  = DataStructs.TanimotoSimilarity(fp_mol, fp_1)
